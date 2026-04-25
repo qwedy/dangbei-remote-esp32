@@ -86,16 +86,16 @@ void MqttService::callback(char* topic, uint8_t* payload, unsigned int length) {
       return;
     }
     // Для бинарного контрола volume_change:
-    // payload "0" -> громче, payload "1" -> тише.
+    // payload "1" -> громче, payload "0" -> тише.
     if (button == "volume_change") {
       char buf[8];
       unsigned int n = (length < sizeof(buf) - 1) ? length : (sizeof(buf) - 1);
       memcpy(buf, payload, n);
       buf[n] = '\0';
       int dir = atoi(buf);
-      if (dir == 0) {
+      if (dir == 1) {
         hidConsumerNowOrQueue(0x00E9);
-      } else if (dir == 1) {
+      } else if (dir == 0) {
         hidConsumerNowOrQueue(0x00EA);
       } else {
         Serial.printf("Unknown volume_change payload: %s\n", buf);
