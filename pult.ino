@@ -13,9 +13,9 @@
 //#include "pult_state.h"
 
 // ---- Настройки ----
-#define WIFI_SSID        "RT-GPON-N11"
-#define WIFI_PASSWORD    "limit678"
-#define MQTT_HOST        "192.168.0.15"
+#define WIFI_SSID        "имя точки доступа wifi" // ЗАПОЛНИТЬ
+#define WIFI_PASSWORD    "пароль от wifi" // ЗАПОЛНИТЬ
+#define MQTT_HOST        "ip брокера mqtt" // ЗАПОЛНИТЬ
 #define MQTT_PORT        1883
 #define MQTT_USER        ""
 #define MQTT_PASS        ""
