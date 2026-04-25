@@ -27,7 +27,7 @@
 // Тайминги FSM (pairing) и wake-окна.
 #define PAIR_TIMEOUT_MS       30000 // Таймаут pairing (30 секунд) для подключение к проектору
 #define WAKE_DURATION_MS      5000  // Таймаут wake (5 секунд) для подключение к проектору
-#define RECONNECT_DELAY_MS    2000  // Пауза перед переподключением после разрыва соединения
+#define RECONNECT_DELAY_MS    15000 // Интервал повторных попыток переподключения (15 секунд)
 
 // MQTT клиент (глобальная переменная должна быть видна в mqtt_logic.ino).
 WiFiClient espClient;
@@ -44,7 +44,7 @@ void setup() {
 
   // 1) GPIO (LED/кнопка)
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   // 2) WiFi + MQTT

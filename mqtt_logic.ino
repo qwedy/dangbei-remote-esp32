@@ -85,6 +85,23 @@ void MqttService::callback(char* topic, uint8_t* payload, unsigned int length) {
       handleCommand(cmd);
       return;
     }
+    // Для бинарного контрола volume_change:
+    // payload "0" -> громче, payload "1" -> тише.
+    if (button == "volume_change") {
+      char buf[8];
+      unsigned int n = (length < sizeof(buf) - 1) ? length : (sizeof(buf) - 1);
+      memcpy(buf, payload, n);
+      buf[n] = '\0';
+      int dir = atoi(buf);
+      if (dir == 0) {
+        hidConsumerNowOrQueue(0x00E9);
+      } else if (dir == 1) {
+        hidConsumerNowOrQueue(0x00EA);
+      } else {
+        Serial.printf("Unknown volume_change payload: %s\n", buf);
+      }
+      return;
+    }
 
     handleCommand(button.c_str());
   }
@@ -109,8 +126,7 @@ void MqttService::publishMeta() {
     {"down",        "Down",        7},
     {"left",        "Left",        8},
     {"right",       "Right",       9},
-    {"volume_up",   "Volume+",    10},
-    {"volume_down", "Volume-",    11},
+    {"volume_change", "Volume +/-", 10},
     {"find_pult",   "Find pult",  12},
     {"remote_pult_on", "Remote pult ON", 13},
   };
@@ -201,6 +217,10 @@ void MqttService::publishProjectorConnected(bool connected) {
   mqttClient.publish(
     "/devices/" DEVICE_ID "/controls/connected",
     connected ? "1" : "0", true);
+    // обратная связь для power кнопки (чтоб УД видел состояние проектора)
+    mqttClient.publish(
+      "/devices/" DEVICE_ID "/controls/power",
+      connected ? "1" : "0", true);
 }
 
 void MqttService::publishRemotePultBatteryState() {

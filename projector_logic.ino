@@ -53,16 +53,10 @@ static PendingType pendingType = PendingType::kNone;
 static uint16_t pendingValue = 0; // keycode (<=0xFF) или consumer usage (<=0xFFFF)
 
 // ---- LED ----
-void ledOn()  { digitalWrite(LED_PIN, LOW); }
-void ledOff() { digitalWrite(LED_PIN, HIGH); }
+void ledOn()  { digitalWrite(LED_PIN, HIGH); }
+void ledOff() { digitalWrite(LED_PIN, LOW); }
 
 static void ledTickPairing() {
-  uint32_t t = millis() % 400;
-  if (t < 200) ledOn(); else ledOff();
-}
-
-static void ledTickWaking() {
-  // Медленное мигание при wake — 100мс вкл / 900мс выкл
   uint32_t t = millis() % 1000;
   if (t < 100) ledOn(); else ledOff();
 }
@@ -112,7 +106,8 @@ static void setWakeAdvertising() {
 // ---- Wake on BLE ----
 // Запуск включения проектора, если не подключен к ESP
 void ProjectorService::startWakeUp() {
-  if (projectorConnected) return; // уже подключён
+  if (projectorConnected) return;
+  Serial.println("PROJECTOR: Starting wake advertising...");
   currentState = State::kWakingUp;
   wakeStartTime = millis();
   setWakeAdvertising();
@@ -120,9 +115,9 @@ void ProjectorService::startWakeUp() {
 
 // Отложенное подключение к проектору после включения
 void ProjectorService::stopWakeUp() {
+  Serial.println("PROJECTOR: Wake done, switching to pairing...");
   pServer->getAdvertising()->stop();
   setNormalAdvertising();
-  // После wake сразу начинаем pairing — проектор должен подключиться
   startPairing();
 }
 
@@ -156,25 +151,19 @@ void ProjectorService::projectorLoopTick() {
     // Мигаем светодиодом при ожидании подключения
     case State::kWaitingPair:
       ledTickPairing();
-      if (now - pairStartTime >= PAIR_TIMEOUT_MS) {
-        stopPairing();
-        Serial.println("PROJECTOR: Pairing timeout.");
-      }
       break;
     // Мигаем светодиодом при включении проектора
     case State::kWakingUp:
-      ledTickWaking();
       if (now - wakeStartTime >= WAKE_DURATION_MS) {
         stopWakeUp();
       }
       break;
     // Пауза перед переподключением после разрыва соединения
     case State::kReconnecting:
-      if (now - reconnectStartTime >= RECONNECT_DELAY_MS) {
-        Serial.println("PROJECTOR: Reconnecting after disconnect...");
-        currentState = State::kIdle;
-        startPairing();
-      }
+      // Непрерывный режим переподключения: сразу возвращаемся в pairing и держим рекламу до подключения.
+      Serial.println("PROJECTOR: Reconnecting after disconnect...");
+      currentState = State::kIdle;
+      startPairing();
       break;
   }
 }
